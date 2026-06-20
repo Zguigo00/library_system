@@ -58,3 +58,35 @@ class TestDeleteBook:
         db.conn.commit()
         ok, msg = db.delete_book("B0001")
         assert ok is True
+
+
+class TestDeleteCopy:
+    """删除副本时的约束检查"""
+
+    def test_delete_borrowed_copy_fails(self, db):
+        """已借出的副本，禁止删除"""
+        db.borrow_book("R0001", "C0001")
+        ok, msg = db.delete_copy("C0001")
+        assert ok is False
+        assert "借出" in msg
+
+    def test_delete_available_copy_succeeds(self, db):
+        """在馆副本，可以删除"""
+        ok, msg = db.delete_copy("C0001")
+        assert ok is True
+
+    def test_delete_copy_preserves_history(self, db):
+        """删除副本后，历史借阅记录保留"""
+        db.borrow_book("R0001", "C0001")
+        record = db.conn.execute(
+            "SELECT borrow_id FROM BorrowRecord WHERE reader_id='R0001'"
+        ).fetchone()
+        borrow_id = record["borrow_id"]
+        db.return_book(borrow_id)
+        db.delete_copy("C0001")
+        # 借阅记录还在，但 reg_no 被置为 NULL
+        history = db.conn.execute(
+            "SELECT * FROM BorrowRecord WHERE borrow_id=?", (borrow_id,)
+        ).fetchall()
+        assert len(history) == 1
+        assert history[0]["reg_no"] is None

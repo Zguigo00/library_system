@@ -66,14 +66,14 @@ class Database:
         CREATE TABLE IF NOT EXISTS BorrowRecord (
             borrow_id    INTEGER PRIMARY KEY AUTOINCREMENT,
             reader_id    TEXT(10),
-            reg_no       TEXT(15) NOT NULL,
+            reg_no       TEXT(15),
             borrow_date  TEXT NOT NULL DEFAULT (date('now')),
             due_date     TEXT NOT NULL,
             return_date  TEXT,
             fine         REAL DEFAULT 0,
             is_lost      INTEGER DEFAULT 0,
             FOREIGN KEY (reader_id) REFERENCES Reader(reader_id) ON DELETE SET NULL,
-            FOREIGN KEY (reg_no) REFERENCES BookCopy(reg_no)
+            FOREIGN KEY (reg_no) REFERENCES BookCopy(reg_no) ON DELETE SET NULL
         );
 
         CREATE TABLE IF NOT EXISTS SysUser (
@@ -222,7 +222,6 @@ class Database:
         self.conn.execute(
             "UPDATE Book SET total_copies = total_copies - 1 WHERE book_id=?",
             (copy['book_id'],))
-        self.conn.execute("DELETE FROM BorrowRecord WHERE reg_no=?", (reg_no,))
         self.conn.execute("DELETE FROM BookCopy WHERE reg_no=?", (reg_no,))
         self.conn.commit()
         return True, "删除成功"
