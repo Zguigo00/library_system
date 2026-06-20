@@ -1,4 +1,5 @@
 """还书业务规则测试"""
+from datetime import datetime, timedelta
 import pytest
 
 
@@ -34,3 +35,47 @@ class TestReturnBookOwnership:
         ok, msg = self.db.return_book(record["borrow_id"], reader_id="R0002")
         assert ok is False
         assert "不属于" in msg or "无权" in msg
+
+
+class TestReturnLostBook:
+    """允许归还已遗失的书"""
+
+    def test_return_lost_book_restores_copy(self, db):
+        """归还已遗失的书，副本状态恢复为「在馆」"""
+        db.borrow_book("R0001", "C0001")
+        record = db.conn.execute(
+            "SELECT borrow_id FROM BorrowRecord WHERE reader_id='R0001'"
+        ).fetchone()
+        # 先标记为遗失
+        db.return_book(record["borrow_id"], is_lost=True)
+        copy = db.get_copy("C0001")
+        assert copy["status"] == "丢失"
+        # 读者找到书，归还
+        ok, msg = db.return_book(record["borrow_id"], is_lost=False)
+        assert ok is True
+        copy = db.get_copy("C0001")
+        assert copy["status"] == "在馆"
+
+    def test_lost_book_fine_stays(self, db):
+        """归还已遗失的书，遗失罚款保留"""
+        db.borrow_book("R0001", "C0001")
+        borrow = db.conn.execute(
+            "SELECT borrow_id FROM BorrowRecord WHERE reader_id='R0001'"
+        ).fetchone()
+        borrow_id = borrow["borrow_id"]
+        # 标记遗失，罚款100
+        db.return_book(borrow_id, is_lost=True)
+        record = db.conn.execute(
+            "SELECT fine, is_lost FROM BorrowRecord WHERE borrow_id=?",
+            (borrow_id,)
+        ).fetchone()
+        assert record["fine"] == 100.0
+        assert record["is_lost"] == 1
+        # 归还，罚款应清除（因为书回来了）
+        db.return_book(borrow_id, is_lost=False)
+        record = db.conn.execute(
+            "SELECT fine, is_lost, return_date FROM BorrowRecord WHERE borrow_id=?",
+            (borrow_id,)
+        ).fetchone()
+        assert record["is_lost"] == 0
+        assert record["return_date"] is not None

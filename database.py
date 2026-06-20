@@ -301,7 +301,7 @@ class Database:
             return False, "借阅记录不存在"
         if reader_id and record['reader_id'] != reader_id:
             return False, "该借阅记录不属于当前读者，无权归还"
-        if record['return_date']:
+        if record['return_date'] and not record['is_lost']:
             return False, "该书已归还"
         today = datetime.now().strftime('%Y-%m-%d')
         fine = 0.0
