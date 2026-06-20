@@ -185,20 +185,14 @@ class Database:
         self.conn.commit()
 
     def delete_book(self, book_id):
-        borrowed = self.conn.execute("""
-            SELECT COUNT(*) FROM BorrowRecord br
-            JOIN BookCopy bc ON br.reg_no = bc.reg_no
-            WHERE bc.book_id=? AND br.return_date IS NULL
-        """, (book_id,)).fetchone()[0]
-        if borrowed > 0:
-            return False, "该书有未归还的副本，无法删除"
-        self.conn.execute("""
-            DELETE FROM BorrowRecord WHERE reg_no IN
-            (SELECT reg_no FROM BookCopy WHERE book_id=?)
-        """, (book_id,))
-        self.conn.execute("DELETE FROM BookCopy WHERE book_id=?", (book_id,))
+        copies = self.conn.execute(
+            "SELECT COUNT(*) FROM BookCopy WHERE book_id=?", (book_id,)
+        ).fetchone()[0]
+        if copies > 0:
+            return False, "该书有副本存在，无法删除"
         self.conn.execute("DELETE FROM Book WHERE book_id=?", (book_id,))
         self.conn.commit()
+        return True, "删除成功"
         return True, "删除成功"
 
     def get_book(self, book_id):

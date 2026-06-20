@@ -1,5 +1,6 @@
 """删除约束业务规则测试"""
 import pytest
+from database import Database
 
 
 class TestDeleteReader:
@@ -39,3 +40,21 @@ class TestDeleteReader:
         ).fetchall()
         assert len(history) == 1
         assert history[0]["reader_id"] is None
+
+
+class TestDeleteBook:
+    """删除图书时的约束检查"""
+
+    def test_delete_book_with_copies_fails(self, db):
+        """有副本存在，禁止删除图书"""
+        ok, msg = db.delete_book("B0001")
+        assert ok is False
+        assert "副本" in msg
+
+    def test_delete_book_without_copies_succeeds(self, db):
+        """无副本，可以删除图书"""
+        # 先删掉所有副本
+        db.conn.execute("DELETE FROM BookCopy WHERE book_id='B0001'")
+        db.conn.commit()
+        ok, msg = db.delete_book("B0001")
+        assert ok is True
