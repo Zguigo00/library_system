@@ -65,14 +65,14 @@ class Database:
 
         CREATE TABLE IF NOT EXISTS BorrowRecord (
             borrow_id    INTEGER PRIMARY KEY AUTOINCREMENT,
-            reader_id    TEXT(10) NOT NULL,
+            reader_id    TEXT(10),
             reg_no       TEXT(15) NOT NULL,
             borrow_date  TEXT NOT NULL DEFAULT (date('now')),
             due_date     TEXT NOT NULL,
             return_date  TEXT,
             fine         REAL DEFAULT 0,
             is_lost      INTEGER DEFAULT 0,
-            FOREIGN KEY (reader_id) REFERENCES Reader(reader_id),
+            FOREIGN KEY (reader_id) REFERENCES Reader(reader_id) ON DELETE SET NULL,
             FOREIGN KEY (reg_no) REFERENCES BookCopy(reg_no)
         );
 
@@ -143,7 +143,6 @@ class Database:
             (reader_id,)).fetchone()[0]
         if active > 0:
             return False, "该读者有未归还的图书，无法删除"
-        self.conn.execute("DELETE FROM BorrowRecord WHERE reader_id=?", (reader_id,))
         self.conn.execute("DELETE FROM SysUser WHERE user_id=?", (reader_id,))
         self.conn.execute("DELETE FROM Reader WHERE reader_id=?", (reader_id,))
         self.conn.commit()
