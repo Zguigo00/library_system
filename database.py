@@ -294,11 +294,13 @@ class Database:
         return True, f"借书成功！应还日期：{due}"
 
     # ─── 还书 ───
-    def return_book(self, borrow_id, is_lost=False):
+    def return_book(self, borrow_id, is_lost=False, reader_id=None):
         record = self.conn.execute("SELECT * FROM BorrowRecord WHERE borrow_id=?",
                                    (borrow_id,)).fetchone()
         if not record:
             return False, "借阅记录不存在"
+        if reader_id and record['reader_id'] != reader_id:
+            return False, "该借阅记录不属于当前读者，无权归还"
         if record['return_date']:
             return False, "该书已归还"
         today = datetime.now().strftime('%Y-%m-%d')

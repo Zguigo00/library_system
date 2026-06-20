@@ -153,7 +153,8 @@ class BorrowFrame(ttk.Frame):
             messagebox.showwarning('提示', '请先选择一条未还记录')
             return
         borrow_id = self.return_tree.item(sel[0])['values'][0]
-        ok, msg = self.db.return_book(borrow_id, is_lost=False)
+        reader_id = self.user_info['user_id'] if not self.is_admin else None
+        ok, msg = self.db.return_book(borrow_id, is_lost=False, reader_id=reader_id)
         if ok:
             messagebox.showinfo('成功', msg)
             self.refresh_active()
@@ -167,8 +168,9 @@ class BorrowFrame(ttk.Frame):
             messagebox.showwarning('提示', '请先选择一条未还记录')
             return
         borrow_id = self.return_tree.item(sel[0])['values'][0]
+        reader_id = self.user_info['user_id'] if not self.is_admin else None
         if messagebox.askyesno('确认', '确定将此书标记为丢失？将产生罚款。'):
-            ok, msg = self.db.return_book(borrow_id, is_lost=True)
+            ok, msg = self.db.return_book(borrow_id, is_lost=True, reader_id=reader_id)
             if ok:
                 messagebox.showinfo('成功', msg)
                 self.refresh_active()
