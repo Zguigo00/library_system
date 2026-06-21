@@ -17,9 +17,9 @@ class BorrowFrame(ttk.Frame):
         ('is_lost', '丢失', 50),
     ]
 
-    def __init__(self, parent, db, user_info):
+    def __init__(self, parent, presenter, user_info):
         super().__init__(parent)
-        self.db = db
+        self.presenter = presenter
         self.user_info = user_info
         self.is_admin = user_info['role'] == '管理员'
         self._build_ui()
@@ -111,8 +111,7 @@ class BorrowFrame(ttk.Frame):
         vsb.pack(fill='y', side='right', pady=5)
 
     def refresh_active(self):
-        reader_id = None if self.is_admin else self.user_info['user_id']
-        records = self.db.get_active_borrows(reader_id)
+        records = self.presenter.get_active_borrows()
         for tree in (self.return_tree, self.active_tree):
             for item in tree.get_children():
                 tree.delete(item)
@@ -120,10 +119,9 @@ class BorrowFrame(ttk.Frame):
                 tree.insert('', 'end', values=[r[c[0]] for c in self.ACTIVE_COLS])
 
     def refresh_history(self):
-        reader_id = None if self.is_admin else self.user_info['user_id']
         for item in self.history_tree.get_children():
             self.history_tree.delete(item)
-        for r in self.db.get_all_borrows(reader_id):
+        for r in self.presenter.get_borrow_history():
             vals = []
             for c in self.HISTORY_COLS:
                 v = r[c[0]]
@@ -138,7 +136,7 @@ class BorrowFrame(ttk.Frame):
         if not rid or not reg:
             messagebox.showwarning('提示', '请输入借书证号和馆藏注册号')
             return
-        ok, msg = self.db.borrow_book(rid, reg)
+        ok, msg = self.presenter.borrow_book(rid, reg)
         if ok:
             messagebox.showinfo('成功', msg)
             self.borrow_reg.delete(0, 'end')
@@ -153,8 +151,7 @@ class BorrowFrame(ttk.Frame):
             messagebox.showwarning('提示', '请先选择一条未还记录')
             return
         borrow_id = self.return_tree.item(sel[0])['values'][0]
-        reader_id = self.user_info['user_id'] if not self.is_admin else None
-        ok, msg = self.db.return_book(borrow_id, is_lost=False, reader_id=reader_id)
+        ok, msg = self.presenter.return_book(borrow_id)
         if ok:
             messagebox.showinfo('成功', msg)
             self.refresh_active()
@@ -168,9 +165,8 @@ class BorrowFrame(ttk.Frame):
             messagebox.showwarning('提示', '请先选择一条未还记录')
             return
         borrow_id = self.return_tree.item(sel[0])['values'][0]
-        reader_id = self.user_info['user_id'] if not self.is_admin else None
         if messagebox.askyesno('确认', '确定将此书标记为丢失？将产生罚款。'):
-            ok, msg = self.db.return_book(borrow_id, is_lost=True, reader_id=reader_id)
+            ok, msg = self.presenter.mark_lost(borrow_id)
             if ok:
                 messagebox.showinfo('成功', msg)
                 self.refresh_active()
