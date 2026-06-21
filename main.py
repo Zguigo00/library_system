@@ -12,6 +12,7 @@ from views.ui_reader import ReaderManageFrame
 from views.ui_book import BookManageFrame
 from views.ui_search import SearchFrame
 from views.ui_borrow import BorrowFrame
+from presenters.presenter_borrow import BorrowPresenter
 
 
 class MainApp(tk.Tk):
@@ -87,7 +88,8 @@ class MainApp(tk.Tk):
 
     def _show_borrow(self):
         self._clear_content()
-        BorrowFrame(self.content, self.db, self.current_user).pack(fill='both', expand=True)
+        presenter = BorrowPresenter(self.db, self.current_user)
+        BorrowFrame(self.content, presenter, self.current_user).pack(fill='both', expand=True)
 
     def _show_reader(self):
         self._clear_content()
