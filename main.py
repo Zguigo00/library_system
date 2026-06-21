@@ -7,11 +7,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from models.database import Database
 from models.init_data import init_sample_data
-from ui_login import LoginFrame
-from ui_reader import ReaderManageFrame
-from ui_book import BookManageFrame
-from ui_search import SearchFrame
-from ui_borrow import BorrowFrame
+from views.ui_login import LoginFrame
+from views.ui_reader import ReaderManageFrame
+from views.ui_book import BookManageFrame
+from views.ui_search import SearchFrame
+from views.ui_borrow import BorrowFrame
 
 
 class MainApp(tk.Tk):
