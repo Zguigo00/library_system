@@ -1,5 +1,5 @@
 """借书业务规则测试"""
-from database import Database
+from models.database import Database
 
 
 class TestBorrowCopyStatus:

@@ -1,4 +1,4 @@
-from database import Database, hash_password
+from models.database import Database, hash_password
 from datetime import datetime, timedelta
 
 

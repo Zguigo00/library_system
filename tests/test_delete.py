@@ -1,6 +1,6 @@
 """删除约束业务规则测试"""
 import pytest
-from database import Database
+from models.database import Database
 
 
 class TestDeleteReader:

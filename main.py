@@ -5,8 +5,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from database import Database
-from init_data import init_sample_data
+from models.database import Database
+from models.init_data import init_sample_data
 from ui_login import LoginFrame
 from ui_reader import ReaderManageFrame
 from ui_book import BookManageFrame
