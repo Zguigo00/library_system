@@ -15,9 +15,9 @@ class BookManageFrame(ttk.Frame):
         ('in_date', '入库日期', 100), ('status', '状态', 60),
     ]
 
-    def __init__(self, parent, db):
+    def __init__(self, parent, presenter):
         super().__init__(parent)
-        self.db = db
+        self.presenter = presenter
         self._build_ui()
         self.refresh_books()
 
@@ -66,7 +66,7 @@ class BookManageFrame(ttk.Frame):
     def refresh_books(self):
         for item in self.book_tree.get_children():
             self.book_tree.delete(item)
-        for b in self.db.get_all_books():
+        for b in self.presenter.get_all_books():
             self.book_tree.insert('', 'end', values=[b[c[0]] for c in self.BOOK_COLS])
         self._clear_copies()
 
@@ -81,7 +81,7 @@ class BookManageFrame(ttk.Frame):
         vals = self.book_tree.item(sel[0])['values']
         book_id = vals[0]
         self._clear_copies()
-        for c in self.db.get_copies_by_book(book_id):
+        for c in self.presenter.get_copies_by_book(book_id):
             self.copy_tree.insert('', 'end', values=[c['reg_no'], c['library_room'],
                                                       c['in_date'], c['status']])
 
@@ -105,7 +105,7 @@ class BookManageFrame(ttk.Frame):
         if not vals:
             return
         if messagebox.askyesno('确认', f"确定删除图书 [{vals[0]}]《{vals[1]}》及其所有副本？"):
-            ok, msg = self.db.delete_book(vals[0])
+            ok, msg = self.presenter.delete_book(vals[0])
             if ok:
                 self.refresh_books()
                 messagebox.showinfo('成功', msg)
@@ -144,14 +144,14 @@ class BookManageFrame(ttk.Frame):
                 messagebox.showwarning('提示', '书号和书名不能为空')
                 return
             if vals:
-                self.db.update_book(data['book_id'], (
+                self.presenter.update_book(data['book_id'], (
                     data['book_name'], data['author'], data['publisher'],
                     data['pub_date'], int(data['edition'] or 1),
                     float(data['price'] or 0), data['summary'],
                     data['class_no'], data['call_no'], int(data['total_copies'] or 0)
                 ))
             else:
-                self.db.add_book((
+                self.presenter.add_book((
                     data['book_id'], data['book_name'], data['author'],
                     data['publisher'], data['pub_date'], int(data['edition'] or 1),
                     float(data['price'] or 0), data['summary'],
@@ -188,7 +188,7 @@ class BookManageFrame(ttk.Frame):
             if not reg:
                 messagebox.showwarning('提示', '注册号不能为空')
                 return
-            self.db.add_copy(reg, book_id, room)
+            self.presenter.add_copy(reg, book_id, room)
             self._on_book_select(None)
             dlg.destroy()
 
@@ -201,7 +201,7 @@ class BookManageFrame(ttk.Frame):
             return
         reg_no = self.copy_tree.item(sel[0])['values'][0]
         if messagebox.askyesno('确认', f"确定删除副本 {reg_no}？"):
-            ok, msg = self.db.delete_copy(reg_no)
+            ok, msg = self.presenter.delete_copy(reg_no)
             if ok:
                 self._on_book_select(None)
             else:
