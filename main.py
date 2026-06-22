@@ -13,6 +13,8 @@ from views.ui_book import BookManageFrame
 from views.ui_search import SearchFrame
 from views.ui_borrow import BorrowFrame
 from presenters.presenter_borrow import BorrowPresenter
+from presenters.presenter_reader import ReaderPresenter
+from presenters.presenter_book import BookPresenter
 
 
 class MainApp(tk.Tk):
@@ -93,11 +95,13 @@ class MainApp(tk.Tk):
 
     def _show_reader(self):
         self._clear_content()
-        ReaderManageFrame(self.content, self.db).pack(fill='both', expand=True)
+        presenter = ReaderPresenter(self.db)
+        ReaderManageFrame(self.content, presenter).pack(fill='both', expand=True)
 
     def _show_book(self):
         self._clear_content()
-        BookManageFrame(self.content, self.db).pack(fill='both', expand=True)
+        presenter = BookPresenter(self.db)
+        BookManageFrame(self.content, presenter).pack(fill='both', expand=True)
 
     def _confirm_logout(self):
         if messagebox.askyesno('确认', '确定退出登录？'):
