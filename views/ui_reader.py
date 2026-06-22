@@ -12,9 +12,9 @@ class ReaderManageFrame(ttk.Frame):
         ('borrow_period', '借期(天)', 70), ('occupation', '职业', 70),
     ]
 
-    def __init__(self, parent, db):
+    def __init__(self, parent, presenter):
         super().__init__(parent)
-        self.db = db
+        self.presenter = presenter
         self._build_ui()
         self.refresh()
 
@@ -48,7 +48,7 @@ class ReaderManageFrame(ttk.Frame):
     def refresh(self):
         for item in self.tree.get_children():
             self.tree.delete(item)
-        for r in self.db.get_all_readers():
+        for r in self.presenter.get_all_readers():
             self.tree.insert('', 'end', values=[r[c[0]] for c in self.COLUMNS])
 
     def _search(self):
@@ -58,7 +58,7 @@ class ReaderManageFrame(ttk.Frame):
             return
         for item in self.tree.get_children():
             self.tree.delete(item)
-        for r in self.db.search_readers(kw):
+        for r in self.presenter.search_readers(kw):
             self.tree.insert('', 'end', values=[r[c[0]] for c in self.COLUMNS])
 
     def _get_selected(self):
@@ -81,7 +81,7 @@ class ReaderManageFrame(ttk.Frame):
         if not vals:
             return
         if messagebox.askyesno('确认', f"确定删除读者 [{vals[0]}] {vals[1]}？"):
-            ok, msg = self.db.delete_reader(vals[0])
+            ok, msg = self.presenter.delete_reader(vals[0])
             if ok:
                 self.refresh()
                 messagebox.showinfo('成功', msg)
@@ -127,7 +127,7 @@ class ReaderManageFrame(ttk.Frame):
                 messagebox.showwarning('提示', '借书证号和姓名不能为空')
                 return
             if vals:  # 编辑
-                self.db.update_reader(data['reader_id'], (
+                self.presenter.update_reader(data['reader_id'], (
                     data['reader_name'], data['reader_sex'], data['birth_date'],
                     data['id_card'], data['dept'], data['address'], data['zip_code'],
                     data['phone'], data['borrow_range'],
@@ -135,7 +135,7 @@ class ReaderManageFrame(ttk.Frame):
                     data['occupation']
                 ))
             else:  # 新增
-                self.db.add_reader((
+                self.presenter.add_reader((
                     data['reader_id'], data['reader_name'], data['reader_sex'],
                     data['birth_date'], data['id_card'], data['dept'], data['address'],
                     data['zip_code'], data['phone'], data.get('reg_date', ''),
@@ -144,7 +144,7 @@ class ReaderManageFrame(ttk.Frame):
                 ))
                 # 同时创建登录账号
                 try:
-                    self.db.add_user(data['reader_id'], data['reader_name'], '123456', '读者')
+                    self.presenter.add_user(data['reader_id'], data['reader_name'], '123456', '读者')
                 except Exception:
                     pass
             self.refresh()
